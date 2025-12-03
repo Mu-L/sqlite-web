@@ -6,13 +6,16 @@ ENV CFLAGS="-DSQLITE_DEFAULT_CACHE_SIZE=-8000 \
             -DSQLITE_DEFAULT_SYNCHRONOUS=0 \
             -DSQLITE_DEFAULT_WAL_SYNCHRONOUS=0 \
             -DSQLITE_DISABLE_DIRSYNC \
+            -DSQLITE_ENABLE_BATCH_ATOMIC_WRITE \
             -DSQLITE_ENABLE_COLUMN_METADATA \
+            -DSQLITE_ENABLE_DBSTAT_VTAB \
             -DSQLITE_ENABLE_DESERIALIZE \
             -DSQLITE_ENABLE_FTS3 \
             -DSQLITE_ENABLE_FTS3_PARENTHESIS \
             -DSQLITE_ENABLE_FTS4 \
             -DSQLITE_ENABLE_FTS5 \
             -DSQLITE_ENABLE_JSON1 \
+            -DSQLITE_ENABLE_MATH_FUNCTIONS \
             -DSQLITE_ENABLE_MEMDB \
             -DSQLITE_ENABLE_STAT4 \
             -DSQLITE_ENABLE_STMTVTAB \
@@ -27,6 +30,7 @@ ENV CFLAGS="-DSQLITE_DEFAULT_CACHE_SIZE=-8000 \
             -DSQLITE_USE_URI \
             -DSQLITE_DEFAULT_WAL_AUTOCHECKPOINT=512 \
             -DHAVE_USLEEP \
+            -DSQLITE_ENABLE_EXPLAIN_COMMENTS \
             -O2 -fPIC"
 RUN apk update \
       && apk add --no-cache --virtual .build-deps build-base libressl coreutils gcc libc-dev linux-headers make tar wget tcl tcl-dev dpkg dpkg-dev \
@@ -34,7 +38,7 @@ RUN apk update \
       && tar xzf sqlite.tar.gz \
       && cd sqlite \
       && buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
-      && LIBS="-lm" PREFIX="/usr/local" ./configure --build="$buildArch" --disable-tcl --enable-shared --enable-static --prefix="/usr/local" \
+      && LIBS="-lm" PREFIX="/usr/local" ./configure --build="$buildArch" --disable-tcl --fts3 --fts4 --fts5 --update-limit --prefix="/usr/local" \
       && make -j4 \
       && make install \
       && cd ../ \
@@ -47,4 +51,4 @@ EXPOSE 8080
 VOLUME /data
 WORKDIR /data
 SHELL ["/bin/ash", "-c"]
-CMD sqlite_web -H 0.0.0.0 -x $SQLITE_DATABASE
+CMD ["sqlite_web", "-H", "0.0.0.0", "-x", "$SQLITE_DATABASE"]
